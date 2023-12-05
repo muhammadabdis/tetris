@@ -4,6 +4,9 @@
 #include <conio.h>
 #include <unistd.h>
 
+#define SCREEN_WIDTH 30
+#define SCREEN_HEIGHT 18
+
 #define FIELD_WIDTH 12
 #define FIELD_HEIGHT 18
 
@@ -12,11 +15,11 @@
 #define RIGHT_KEY 'd'
 #define DOWN_KEY 's'
 
-void DrawBoundary(int field[]);
+void DrawField(int field[]);
 void DrawPiece(int field[], char piece[]);
-void Render(int field[]);
+void DrawScreen(char screen[], int field[]);
 int Rotate(int r, int x, int y);
-void HandleInput(int c);
+void HandleKeyPress(int c);
 
 int piece = 0;
 int px = FIELD_WIDTH / 2 - 2, py = 0;
@@ -24,6 +27,7 @@ int rotation = 0;
 
 int main()
 {
+  char screen[SCREEN_WIDTH * SCREEN_WIDTH];
   int field[FIELD_WIDTH * FIELD_HEIGHT];
 
   char tetromino[7][17];
@@ -37,24 +41,26 @@ int main()
 
   while (1)
   {
-    usleep(100 * 1000);
+    usleep(50 * 1000);
 
-    DrawBoundary(field);
+    DrawField(field);
 
     if (kbhit())
-      HandleInput(getch());
+      HandleKeyPress(getch());
 
     DrawPiece(field, tetromino[piece]);
 
+    DrawScreen(screen, field);
+
     system("cls");
 
-    Render(field);
+    printf("%s", screen);
   }
 
   return 0;
 }
 
-void DrawBoundary(int field[])
+void DrawField(int field[])
 {
   int x, y;
   for (x = 0; x < FIELD_WIDTH; x++)
@@ -74,15 +80,22 @@ void DrawPiece(int field[], char piece[])
     }
 }
 
-void Render(int field[])
+void DrawScreen(char screen[], int field[])
 {
-  int x, y;
+  int i, x, y;
+
+  for (y = 0; y < SCREEN_HEIGHT; y++)
+    for (x = 0; x < SCREEN_WIDTH; x++)
+    {
+      i = y * SCREEN_WIDTH + x;
+      screen[i] = (i % SCREEN_WIDTH != SCREEN_WIDTH - 1) ? ' ' : '\n';
+    }
+
+  screen[SCREEN_WIDTH * SCREEN_HEIGHT] = '\0';
+
   for (y = 0; y < FIELD_HEIGHT; y++)
-  {
     for (x = 0; x < FIELD_WIDTH; x++)
-      putch(field[y * FIELD_WIDTH + x]);
-    putch('\n');
-  }
+      screen[y * SCREEN_WIDTH + x] = field[y * FIELD_WIDTH + x];
 }
 
 int Rotate(int r, int x, int y)
@@ -90,37 +103,21 @@ int Rotate(int r, int x, int y)
   int i;
   switch (r % 4)
   {
-  case 0:
-    i = y * 4 + x;
-    break;
-  case 1:
-    i = 12 + y - x * 4;
-    break;
-  case 2:
-    i = 15 - y * 4 - x;
-    break;
-  case 3:
-    i = 3 - y + x * 4;
-    break;
+  case 0: i = y * 4 + x; break;
+  case 1: i = 12 + y - x * 4; break;
+  case 2: i = 15 - y * 4 - x; break;
+  case 3: i = 3 - y + x * 4; break;
   }
   return i;
 }
 
-void HandleInput(int c)
+void HandleKeyPress(int c)
 {
   switch (c)
   {
-  case ROTATE_KEY:
-    rotation++;
-    break;
-  case LEFT_KEY:
-    px--;
-    break;
-  case RIGHT_KEY:
-    px++;
-    break;
-  case DOWN_KEY:
-    py++;
-    break;
+  case ROTATE_KEY: rotation++; break;
+  case LEFT_KEY: px--; break;
+  case RIGHT_KEY: px++; break;
+  case DOWN_KEY: py++; break;
   }
 }
