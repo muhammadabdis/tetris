@@ -86,16 +86,13 @@ void DrawScreen(char screen[], int field[])
 
   for (y = 0; y < SCREEN_HEIGHT; y++)
     for (x = 0; x < SCREEN_WIDTH; x++)
-    {
-      i = y * SCREEN_WIDTH + x;
-      screen[i] = (i % SCREEN_WIDTH != SCREEN_WIDTH - 1) ? ' ' : '\n';
-    }
-
-  screen[SCREEN_WIDTH * SCREEN_HEIGHT] = '\0';
+      screen[y * SCREEN_WIDTH + x] = (x != SCREEN_WIDTH - 1) ? ' ' : '\n';
 
   for (y = 0; y < FIELD_HEIGHT; y++)
     for (x = 0; x < FIELD_WIDTH; x++)
       screen[y * SCREEN_WIDTH + x] = field[y * FIELD_WIDTH + x];
+
+  screen[SCREEN_WIDTH * SCREEN_HEIGHT] = '\0';
 }
 
 int Rotate(int r, int x, int y)
