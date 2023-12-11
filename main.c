@@ -5,7 +5,7 @@
 #include <unistd.h>
 
 #define SCREEN_WIDTH 30
-#define SCREEN_HEIGHT 18
+#define SCREEN_HEIGHT 20
 
 #define FIELD_WIDTH 12
 #define FIELD_HEIGHT 18
@@ -29,6 +29,8 @@ int rotation = 0;
 
 int main()
 {
+  int isGameOver;
+
   char screen[SCREEN_WIDTH * SCREEN_WIDTH];
   char field[FIELD_WIDTH * FIELD_HEIGHT];
 
@@ -46,7 +48,7 @@ int main()
 
   DrawBoundary(field);
 
-  while (1)
+  while (!isGameOver)
   {
     usleep(50 * 1000);
 
@@ -84,6 +86,8 @@ int main()
         piece = rand() % 7;
         px = FIELD_WIDTH / 2 - 2, py = 0;
         rotation = 0;
+
+        isGameOver = !DoesPieceFit(field, tetromino[piece], px, py + 1, rotation);
       }
     }
 
@@ -131,7 +135,7 @@ void DrawField(char screen[], char field[])
 
   for (y = 0; y < FIELD_HEIGHT; y++)
     for (x = 0; x < FIELD_WIDTH; x++)
-      screen[y * SCREEN_WIDTH + x] = field[y * FIELD_WIDTH + x];
+      screen[(y + 2) * SCREEN_WIDTH + x] = field[(y + 2) * FIELD_WIDTH + x];
 
   screen[SCREEN_WIDTH * SCREEN_HEIGHT] = '\0';
 }
