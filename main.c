@@ -14,10 +14,12 @@
 #define LEFT_KEY 'a'
 #define RIGHT_KEY 'd'
 #define DOWN_KEY 's'
+#define DROP_KEY ' '
 
-void DrawField(char field[]);
-void DrawPiece(char field[], char piece[]);
-void DrawScreen(char screen[], char field[]);
+void DrawBoundary(char field[]);
+void DrawPiece(char screen[], char piece[]);
+void DrawField(char screen[], char field[]);
+void LockPiece(char screen[], char piece[]);
 int Rotate(int r, int x, int y);
 int DoesPieceFit(char field[], char piece[], int x, int y, int r);
 
@@ -30,6 +32,9 @@ int main()
   char screen[SCREEN_WIDTH * SCREEN_WIDTH];
   char field[FIELD_WIDTH * FIELD_HEIGHT];
 
+  int speed = 20;
+  int tick;
+
   char tetromino[7][17];
   strcpy(tetromino[0], "..A...A...A...A.");
   strcpy(tetromino[1], "..B..BB...B.....");
@@ -39,14 +44,15 @@ int main()
   strcpy(tetromino[5], ".F...F...FF.....");
   strcpy(tetromino[6], "..G...G..GG.....");
 
+  DrawBoundary(field);
+
   while (1)
   {
     usleep(50 * 1000);
 
-    DrawField(field);
+    tick++;
 
     if (kbhit())
-    {
       switch (getch())
       {
       case ROTATE_KEY:
@@ -61,12 +67,29 @@ int main()
       case DOWN_KEY:
         if (DoesPieceFit(field, tetromino[piece], px, py + 1, rotation)) py++;
         break;
+      case DROP_KEY:
+        while (DoesPieceFit(field, tetromino[piece], px, py + 1, rotation)) py++;
+        break;
+      }
+    
+    if (tick == speed)
+    {
+      tick = 0;
+      if (DoesPieceFit(field, tetromino[piece], px, py + 1, rotation))
+        py++;
+      else
+      {
+        LockPiece(field, tetromino[piece]);
+
+        piece = rand() % 7;
+        px = FIELD_WIDTH / 2 - 2, py = 0;
+        rotation = 0;
       }
     }
 
-    DrawPiece(field, tetromino[piece]);
+    DrawField(screen, field);
 
-    DrawScreen(screen, field);
+    DrawPiece(screen, tetromino[piece]);
 
     system("cls");
 
@@ -76,15 +99,17 @@ int main()
   return 0;
 }
 
-void DrawField(char field[])
+void DrawBoundary(char field[])
 {
   int x, y;
   for (x = 0; x < FIELD_WIDTH; x++)
     for (y = 0; y < FIELD_HEIGHT; y++)
       field[y * FIELD_WIDTH + x] = (x == 0 || x == FIELD_WIDTH - 1 || y == FIELD_HEIGHT - 1) ? '#' : '.';
+  
+  field[FIELD_WIDTH * FIELD_HEIGHT] = '\0';
 }
 
-void DrawPiece(char field[], char piece[])
+void DrawPiece(char screen[], char piece[])
 {
   int i, x, y;
   for (x = 0; x < 4; x++)
@@ -92,13 +117,11 @@ void DrawPiece(char field[], char piece[])
     {
       i = Rotate(rotation, x, y);
       if (piece[i] != '.')
-        field[(y + py) * FIELD_WIDTH + (x + px)] = piece[i];
+        screen[(y + py) * SCREEN_WIDTH + (x + px)] = piece[i];
     }
-  
-  field[FIELD_WIDTH * FIELD_HEIGHT] = '\0';
 }
 
-void DrawScreen(char screen[], char field[])
+void DrawField(char screen[], char field[])
 {
   int i, x, y;
 
@@ -111,6 +134,18 @@ void DrawScreen(char screen[], char field[])
       screen[y * SCREEN_WIDTH + x] = field[y * FIELD_WIDTH + x];
 
   screen[SCREEN_WIDTH * SCREEN_HEIGHT] = '\0';
+}
+
+void LockPiece(char field[], char piece[])
+{
+  int i, x, y;
+  for (x = 0; x < 4; x++)
+    for (y = 0; y < 4; y++)
+    {
+      i = Rotate(rotation, x, y);
+      if (piece[i] != '.')
+        field[(y + py) * FIELD_WIDTH + (x + px)] = piece[i];
+    }
 }
 
 int Rotate(int r, int x, int y)
@@ -135,9 +170,7 @@ int DoesPieceFit(char field[], char piece[], int px, int py, int r)
     {
       pi = Rotate(r, x, y);
       fi = (py + y) * FIELD_WIDTH + px + x;
-
-      if (piece[pi] != '.' && field[fi] != '.')
-        return 0;
+      if (piece[pi] != '.' && field[fi] != '.') return 0;
     }
 
   return 1;
