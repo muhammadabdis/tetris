@@ -14,7 +14,6 @@
 #define LEFT_KEY 'a'
 #define RIGHT_KEY 'd'
 #define DOWN_KEY 's'
-#define DROP_KEY ' '
 
 void DrawBoundary(char field[]);
 void DrawPiece(char screen[], char piece[]);
