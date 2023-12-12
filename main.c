@@ -69,9 +69,6 @@ int main()
       case DOWN_KEY:
         if (DoesPieceFit(field, tetromino[piece], px, py + 1, rotation)) py++;
         break;
-      case DROP_KEY:
-        while (DoesPieceFit(field, tetromino[piece], px, py + 1, rotation)) py++;
-        break;
       }
     
     if (tick == speed)
