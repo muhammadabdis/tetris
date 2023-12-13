@@ -35,7 +35,7 @@ int main()
   char screen[SCREEN_WIDTH * SCREEN_WIDTH];
   char field[FIELD_WIDTH * FIELD_HEIGHT];
 
-  int speed = 20;
+  int speed = 50;
   int tick;
 
   char tetromino[7][17];
@@ -51,7 +51,7 @@ int main()
 
   while (!isGameOver)
   {
-    usleep(50 * 1000);
+    usleep(20 * 1000);
 
     tick++;
 
@@ -72,9 +72,10 @@ int main()
         break;
       }
     
-    if (tick == speed)
+    if (tick >= speed)
     {
       tick = 0;
+
       if (DoesPieceFit(field, tetromino[piece], px, py + 1, rotation))
         py++;
       else
