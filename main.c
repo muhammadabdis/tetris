@@ -20,6 +20,8 @@ void DrawPiece(char screen[], char piece[]);
 void DrawField(char screen[], char field[]);
 void LockPiece(char screen[], char piece[]);
 void DrawTetrisLine(char field[], int y);
+void RemoveLines(char field[], int startY, int endY);
+void Display(char screen[], char field[], char piece[]);
 int Rotate(int r, int x, int y);
 int DoesPieceFit(char field[], char piece[], int x, int y, int r);
 int DoesLineTetris(char field[], int y);
@@ -31,12 +33,11 @@ int rotation = 0;
 int main()
 {
   int isGameOver;
+  int speed = 50;
+  int tick;
 
   char screen[SCREEN_WIDTH * SCREEN_WIDTH];
   char field[FIELD_WIDTH * FIELD_HEIGHT];
-
-  int speed = 50;
-  int tick;
 
   char tetromino[7][17];
   strcpy(tetromino[0], "..A...A...A...A.");
@@ -52,8 +53,9 @@ int main()
   while (!isGameOver)
   {
     usleep(20 * 1000);
-
     tick++;
+
+    int startY, endY;
 
     if (kbhit())
       switch (getch())
@@ -85,7 +87,11 @@ int main()
         int x, y;
         for (y = 0; y < 4; y++)
           if (y + py < FIELD_HEIGHT - 1 && DoesLineTetris(field, y + py))
+          {
             DrawTetrisLine(field, y + py);
+            if (startY == 0) startY = y + py;
+            endY = y + py + 1;
+          }
 
         piece = rand() % 7;
         px = FIELD_WIDTH / 2 - 2, py = 0;
@@ -95,13 +101,16 @@ int main()
       }
     }
 
-    DrawField(screen, field);
+    Display(screen, field, tetromino[piece]);
 
-    DrawPiece(screen, tetromino[piece]);
+    if (startY < endY)
+    {
+      usleep(400 * 1000);
+      RemoveLines(field, startY, endY);
+      Display(screen, field, tetromino[piece]);
+    }
 
-    system("cls");
-
-    printf("%s", screen);
+    startY = 0, endY = 0;
   }
 
   return 0;
@@ -163,6 +172,15 @@ void DrawTetrisLine(char field[], int y)
     field[y * FIELD_WIDTH + x] = '=';
 }
 
+void Display(char screen[], char field[], char piece[])
+{
+  DrawField(screen, field);
+  DrawPiece(screen, piece);
+
+  system("cls");
+  printf("%s", screen);
+}
+
 int Rotate(int r, int x, int y)
 {
   int i;
@@ -200,4 +218,15 @@ int DoesLineTetris(char field[], int y)
     tetris &= field[y * FIELD_WIDTH + x] != '.';
   
   return tetris;
+}
+
+void RemoveLines(char field[], int startY, int endY)
+{
+  int y, x;
+  int diff = endY - startY;
+  for (y = endY - 1; y >= 0; y--)
+    for (x = 1; x < FIELD_WIDTH - 1; x++)
+      field[y * FIELD_WIDTH + x] = (y - diff >= 0)
+        ? field[(y - diff) * FIELD_WIDTH + x]
+        : '.';
 }
