@@ -20,7 +20,7 @@ void DrawPiece(char screen[], char piece[]);
 void DrawField(char screen[], char field[]);
 void LockPiece(char screen[], char piece[]);
 void DrawTetrisLine(char field[], int y);
-void RemoveLines(char field[], int startY, int endY);
+void RemoveLines(char field[], int lines[], int len);
 void Display(char screen[], char field[], char piece[]);
 int Rotate(int r, int x, int y);
 int DoesPieceFit(char field[], char piece[], int x, int y, int r);
@@ -55,25 +55,29 @@ int main()
     usleep(20 * 1000);
     tick++;
 
-    int startY, endY;
+    int lines[FIELD_HEIGHT - 1], li = -1;
 
     if (kbhit())
       switch (getch())
       {
       case ROTATE_KEY:
-        if (DoesPieceFit(field, tetromino[piece], px, py, rotation + 1)) rotation++;
+        if (DoesPieceFit(field, tetromino[piece], px, py, rotation + 1))
+          rotation++;
         break;
       case LEFT_KEY:
-        if (DoesPieceFit(field, tetromino[piece], px - 1, py, rotation)) px--;
+        if (DoesPieceFit(field, tetromino[piece], px - 1, py, rotation))
+          px--;
         break;
       case RIGHT_KEY:
-        if (DoesPieceFit(field, tetromino[piece], px + 1, py, rotation)) px++;
+        if (DoesPieceFit(field, tetromino[piece], px + 1, py, rotation))
+          px++;
         break;
       case DOWN_KEY:
-        if (DoesPieceFit(field, tetromino[piece], px, py + 1, rotation)) py++;
+        if (DoesPieceFit(field, tetromino[piece], px, py + 1, rotation))
+          py++;
         break;
       }
-    
+
     if (tick >= speed)
     {
       tick = 0;
@@ -84,13 +88,12 @@ int main()
       {
         LockPiece(field, tetromino[piece]);
 
-        int x, y;
+        int y;
         for (y = 0; y < 4; y++)
           if (y + py < FIELD_HEIGHT - 1 && DoesLineTetris(field, y + py))
           {
             DrawTetrisLine(field, y + py);
-            if (startY == 0) startY = y + py;
-            endY = y + py + 1;
+            lines[++li] = y + py;
           }
 
         piece = rand() % 7;
@@ -103,14 +106,17 @@ int main()
 
     Display(screen, field, tetromino[piece]);
 
-    if (startY < endY)
+    if (li >= 0)
     {
-      usleep(400 * 1000);
-      RemoveLines(field, startY, endY);
+      usleep(200 * 1000);
+      RemoveLines(field, lines, li + 1);
       Display(screen, field, tetromino[piece]);
-    }
 
-    startY = 0, endY = 0;
+      int i;
+      for (i = 0; i < FIELD_HEIGHT - 1; i++)
+        lines[i] = 0;
+      li = -1;
+    }
   }
 
   return 0;
@@ -122,7 +128,7 @@ void DrawBoundary(char field[])
   for (x = 0; x < FIELD_WIDTH; x++)
     for (y = 0; y < FIELD_HEIGHT; y++)
       field[y * FIELD_WIDTH + x] = (x == 0 || x == FIELD_WIDTH - 1 || y == FIELD_HEIGHT - 1) ? '#' : '.';
-  
+
   field[FIELD_WIDTH * FIELD_HEIGHT] = '\0';
 }
 
@@ -203,7 +209,8 @@ int DoesPieceFit(char field[], char piece[], int px, int py, int r)
     {
       pi = Rotate(r, x, y);
       fi = (py + y) * FIELD_WIDTH + px + x;
-      if (piece[pi] != '.' && field[fi] != '.') return 0;
+      if (piece[pi] != '.' && field[fi] != '.')
+        return 0;
     }
 
   return 1;
@@ -216,17 +223,18 @@ int DoesLineTetris(char field[], int y)
 
   for (x = 1; x < FIELD_WIDTH - 1; x++)
     tetris &= field[y * FIELD_WIDTH + x] != '.';
-  
+
   return tetris;
 }
 
-void RemoveLines(char field[], int startY, int endY)
+void RemoveLines(char field[], int lines[], int len)
 {
-  int y, x;
-  int diff = endY - startY;
-  for (y = endY - 1; y >= 0; y--)
-    for (x = 1; x < FIELD_WIDTH - 1; x++)
-      field[y * FIELD_WIDTH + x] = (y - diff >= 0)
-        ? field[(y - diff) * FIELD_WIDTH + x]
-        : '.';
+  int i, j, y, x;
+  for (i = 0; i < len; i++)
+    for (y = lines[i]; y >= 0; y--)
+      for (x = 1; x < FIELD_WIDTH - 1; x++)
+      {
+        j = (y - 1) * FIELD_WIDTH + x;
+        field[y * FIELD_WIDTH + x] = (j) >= 0 ? field[j] : '.';
+      }
 }
