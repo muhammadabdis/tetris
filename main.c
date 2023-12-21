@@ -52,7 +52,7 @@ int main()
 
   while (!isGameOver)
   {
-    usleep(20 * 1000);
+    usleep(2 * 1000);
     tick++;
 
     int lines[FIELD_HEIGHT - 1], li = -1;
@@ -98,7 +98,7 @@ int main()
 
         piece = rand() % 7;
         px = FIELD_WIDTH / 2 - 2, py = 0;
-        rotation = 0;
+        rotation = rand() % 4;
 
         isGameOver = !DoesPieceFit(field, tetromino[piece], px, py + 1, rotation);
       }
@@ -182,7 +182,6 @@ void Display(char screen[], char field[], char piece[])
 {
   DrawField(screen, field);
   DrawPiece(screen, piece);
-
   system("cls");
   printf("%s", screen);
 }
