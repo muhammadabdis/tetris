@@ -26,7 +26,6 @@ int Rotate(int r, int x, int y);
 int DoesPieceFit(char field[], char piece[], int x, int y, int r);
 int DoesLineTetris(char field[], int y);
 
-int piece = 0;
 int px = FIELD_WIDTH / 2 - 2, py = 0;
 int rotation = 0;
 
@@ -35,6 +34,9 @@ int main()
   int isGameOver;
   int speed = 50;
   int tick;
+
+  int piece = rand() % 7;
+  int pn = 1;
 
   char screen[SCREEN_WIDTH * SCREEN_WIDTH];
   char field[FIELD_WIDTH * FIELD_HEIGHT];
@@ -99,6 +101,9 @@ int main()
         piece = rand() % 7;
         px = FIELD_WIDTH / 2 - 2, py = 0;
         rotation = rand() % 4;
+        pn++;
+
+        if (pn % 50) speed--;
 
         isGameOver = !DoesPieceFit(field, tetromino[piece], px, py + 1, rotation);
       }
