@@ -103,7 +103,7 @@ int main()
         rotation = rand() % 4;
         pn++;
 
-        if (pn % 50) speed--;
+        if (pn % 50 == 0 && speed >= 10) speed--;
 
         isGameOver = !DoesPieceFit(field, tetromino[piece], px, py + 1, rotation);
       }
