@@ -4,7 +4,7 @@
 #include <conio.h>
 #include <unistd.h>
 
-#define SCREEN_WIDTH 30
+#define SCREEN_WIDTH 49
 #define SCREEN_HEIGHT 20
 
 #define FIELD_WIDTH 12
@@ -21,7 +21,9 @@ void DrawField(char screen[], char field[]);
 void LockPiece(char screen[], char piece[]);
 void DrawTetrisLine(char field[], int y);
 void RemoveLines(char field[], int lines[], int len);
-void Display(char screen[], char field[], char piece[]);
+void ScoreToString(char scoreboard[], int score);
+void DrawScoreboard(char screen[], char scoreboard[]);
+void Display(char screen[], char field[], char piece[], char scoreboard[]);
 int Rotate(int r, int x, int y);
 int DoesPieceFit(char field[], char piece[], int x, int y, int r);
 int DoesLineTetris(char field[], int y);
@@ -38,8 +40,11 @@ int main()
   int piece = rand() % 7;
   int pn = 1;
 
+  int score = 0;
+
   char screen[SCREEN_WIDTH * SCREEN_WIDTH];
   char field[FIELD_WIDTH * FIELD_HEIGHT];
+  char scoreboard[13];
 
   char tetromino[7][17];
   strcpy(tetromino[0], "..A...A...A...A.");
@@ -102,20 +107,22 @@ int main()
         px = FIELD_WIDTH / 2 - 2, py = 0;
         rotation = rand() % 4;
         pn++;
-
-        if (pn % 50 == 0 && speed >= 10) speed--;
-
+        score += 25;
         isGameOver = !DoesPieceFit(field, tetromino[piece], px, py + 1, rotation);
+
+        if (li >= 0) score += 1 << (li + 1) * 100;
+        if (pn % 50 == 0 && speed >= 10) speed--;
       }
     }
 
-    Display(screen, field, tetromino[piece]);
+    ScoreToString(scoreboard, score);
+    Display(screen, field, tetromino[piece], scoreboard);
 
     if (li >= 0)
     {
       usleep(200 * 1000);
       RemoveLines(field, lines, li + 1);
-      Display(screen, field, tetromino[piece]);
+      Display(screen, field, tetromino[piece], scoreboard);
 
       int i;
       for (i = 0; i < FIELD_HEIGHT - 1; i++)
@@ -183,10 +190,11 @@ void DrawTetrisLine(char field[], int y)
     field[y * FIELD_WIDTH + x] = '=';
 }
 
-void Display(char screen[], char field[], char piece[])
+void Display(char screen[], char field[], char piece[], char scoreboard[])
 {
   DrawField(screen, field);
   DrawPiece(screen, piece);
+  DrawScoreboard(screen, scoreboard);
   system("cls");
   printf("%s", screen);
 }
@@ -241,4 +249,31 @@ void RemoveLines(char field[], int lines[], int len)
         j = (y - 1) * FIELD_WIDTH + x;
         field[y * FIELD_WIDTH + x] = (j) >= 0 ? field[j] : '.';
       }
+}
+
+void ScoreToString(char scoreboard[], int score)
+{
+  char label[] = "SCORE: ";
+
+  int i, d, s = score;
+
+  for (i = 0; i < 7; i++)
+      scoreboard[i] = label[i];
+
+  for (i = 12; i >= 7; i--)
+    if (s > 0)
+    {
+      d = s % 10;
+      scoreboard[i] = d + '0';
+      s /= 10;
+    }
+    else
+      scoreboard[i] = '0';
+}
+
+void DrawScoreboard(char screen[], char scoreboard[])
+{
+  int x;
+  for (x = 0; x < 13; x++)
+    screen[2 * SCREEN_WIDTH + (x + FIELD_WIDTH - 1 + 6)] = scoreboard[x];
 }
